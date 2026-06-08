@@ -17,3 +17,11 @@ output "private_subnet_a_id" {
 output "private_subnet_b_id" {
   value = aws_subnet.private_b.id
 }
+
+output "internet_gateway_id" {
+  value = aws_internet_gateway.this.id
+}
+
+output "public_route_table_id" {
+  value = aws_route_table.public.id
+}
