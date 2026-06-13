@@ -44,3 +44,27 @@ module "ec2" {
 
   key_name = "travelgo-dev-key-v2"
 }
+
+module "alb" {
+  source = "../../modules/alb"
+
+  environment = "dev"
+
+  vpc_id = module.vpc.vpc_id
+
+  public_subnet_a_id = module.vpc.public_subnet_a_id
+  public_subnet_b_id = module.vpc.public_subnet_b_id
+
+  target_instance_id = module.ec2.instance_id
+}
+
+resource "aws_security_group_rule" "alb_to_ec2_http" {
+  type      = "ingress"
+  from_port = 80
+  to_port   = 80
+  protocol  = "tcp"
+
+  security_group_id = module.security_groups.web_security_group_id
+
+  source_security_group_id = module.alb.alb_security_group_id
+}
