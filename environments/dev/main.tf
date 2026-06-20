@@ -58,6 +58,20 @@ module "alb" {
   target_instance_id = module.ec2.instance_id
 }
 
+module "launch_template" {
+  source = "../../modules/launch-template"
+
+  environment = "dev"
+
+  ami_id        = "ami-0067526cb10a5b138"
+  instance_type = "t3.micro"
+
+  security_group_id = module.security_groups.web_security_group_id
+
+  key_name = "travelgo-dev-key-v2"
+}
+
+
 resource "aws_security_group_rule" "alb_to_ec2_http" {
   type      = "ingress"
   from_port = 80
