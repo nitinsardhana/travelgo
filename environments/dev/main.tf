@@ -30,21 +30,6 @@ module "security_groups" {
   environment = "dev"
 }
 
-module "ec2" {
-  source = "../../modules/ec2"
-
-  environment = "dev"
-
-  ami_id        = "ami-0067526cb10a5b138"
-  instance_type = "t3.micro"
-
-  subnet_id = module.vpc.public_subnet_a_id
-
-  security_group_id = module.security_groups.web_security_group_id
-
-  key_name = "travelgo-dev-key-v2"
-}
-
 module "alb" {
   source = "../../modules/alb"
 
@@ -54,8 +39,6 @@ module "alb" {
 
   public_subnet_a_id = module.vpc.public_subnet_a_id
   public_subnet_b_id = module.vpc.public_subnet_b_id
-
-  target_instance_id = module.ec2.instance_id
 }
 
 module "launch_template" {
@@ -71,6 +54,40 @@ module "launch_template" {
   key_name = "travelgo-dev-key-v2"
 }
 
+module "asg" {
+  source = "../../modules/asg"
+
+  environment = "dev"
+
+  launch_template_id      = module.launch_template.launch_template_id
+  launch_template_version = module.launch_template.launch_template_latest_version
+
+  public_subnet_a_id = module.vpc.public_subnet_a_id
+  public_subnet_b_id = module.vpc.public_subnet_b_id
+
+  target_group_arn = module.alb.target_group_arn
+}
+
+
+resource "aws_security_group_rule" "ssh" {
+  type        = "ingress"
+  from_port   = 22
+  to_port     = 22
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = module.security_groups.web_security_group_id
+}
+
+resource "aws_security_group_rule" "https" {
+  type        = "ingress"
+  from_port   = 443
+  to_port     = 443
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = module.security_groups.web_security_group_id
+}
 
 resource "aws_security_group_rule" "alb_to_ec2_http" {
   type      = "ingress"
@@ -78,7 +95,6 @@ resource "aws_security_group_rule" "alb_to_ec2_http" {
   to_port   = 80
   protocol  = "tcp"
 
-  security_group_id = module.security_groups.web_security_group_id
-
+  security_group_id        = module.security_groups.web_security_group_id
   source_security_group_id = module.alb.alb_security_group_id
 }
