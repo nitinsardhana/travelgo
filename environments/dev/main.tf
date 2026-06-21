@@ -68,26 +68,22 @@ module "asg" {
   target_group_arn = module.alb.target_group_arn
 }
 
+module "monitoring" {
 
-resource "aws_security_group_rule" "ssh" {
-  type        = "ingress"
-  from_port   = 22
-  to_port     = 22
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
+  source = "../../modules/monitoring"
 
-  security_group_id = module.security_groups.web_security_group_id
-}
+  environment = "dev"
 
-resource "aws_security_group_rule" "https" {
-  type        = "ingress"
-  from_port   = 443
-  to_port     = 443
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
+  ami_id        = "ami-0067526cb10a5b138"
+  instance_type = "t3.micro"
+
+  subnet_id = module.vpc.public_subnet_a_id
 
   security_group_id = module.security_groups.web_security_group_id
+
+  key_name = "travelgo-dev-key-v2"
 }
+
 
 resource "aws_security_group_rule" "alb_to_ec2_http" {
   type      = "ingress"
@@ -97,4 +93,24 @@ resource "aws_security_group_rule" "alb_to_ec2_http" {
 
   security_group_id        = module.security_groups.web_security_group_id
   source_security_group_id = module.alb.alb_security_group_id
+}
+
+resource "aws_security_group_rule" "grafana" {
+  type        = "ingress"
+  from_port   = 3000
+  to_port     = 3000
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = module.security_groups.web_security_group_id
+}
+
+resource "aws_security_group_rule" "prometheus" {
+  type        = "ingress"
+  from_port   = 9090
+  to_port     = 9090
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = module.security_groups.web_security_group_id
 }
