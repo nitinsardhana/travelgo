@@ -114,3 +114,14 @@ resource "aws_security_group_rule" "prometheus" {
 
   security_group_id = module.security_groups.web_security_group_id
 }
+
+resource "aws_security_group_rule" "node_exporter" {
+  type      = "ingress"
+  from_port = 9100
+  to_port   = 9100
+  protocol  = "tcp"
+
+  cidr_blocks = ["10.0.0.0/16"]
+
+  security_group_id = module.security_groups.web_security_group_id
+}
